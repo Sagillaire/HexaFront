@@ -43,7 +43,7 @@ jobs:
       run: |
         echo "$GOOGLE_CLOUD_SSH_KEY" > ssh_key
         chmod 600 ssh_key
-        scp -i ssh_key -r ./dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/
+        scp -i ssh_key -r ./dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/dist
 
     - name: Restart server
       env:
