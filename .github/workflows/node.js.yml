@@ -24,6 +24,9 @@ jobs:
       - name: Build the project
         run: npm run build  # Esto genera la carpeta dist/
 
+      - name: List files after build  # Verifica si la carpeta dist está allí
+        run: ls -l
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -38,9 +41,14 @@ jobs:
           SERVER_IP: ${{ secrets.SERVER_IP }}
           USERNAME: ${{ secrets.USERNAME }}
         run: |
-          echo "Using SERVER_IP: $SERVER_IP"
-          echo "Using USERNAME: $USERNAME"
-          echo "Using GOOGLE_CLOUD_SSH_KEY: $GOOGLE_CLOUD_SSH_KEY"  # Imprime la clave, aunque esto no es recomendable por seguridad.
           echo "$GOOGLE_CLOUD_SSH_KEY" > ssh_key
           chmod 600 ssh_key
-          scp -v -i ssh_key -r ./dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/dist  # El flag -v es para ver detalles de la transfer
+          scp -v -i ssh_key -r ./dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/dist  # Verifica que la ruta sea correcta
+
+      - name: Restart server
+        env:
+          GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          USERNAME: ${{ secrets.USERNAME }}
+        run: |
+          ssh -i ssh_key $USERNAME@$SERVER_IP "pm2 restart hexa-app"  # Reinicia la aplicación en pm2
