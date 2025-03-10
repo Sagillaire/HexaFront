@@ -38,14 +38,9 @@ jobs:
           SERVER_IP: ${{ secrets.SERVER_IP }}
           USERNAME: ${{ secrets.USERNAME }}
         run: |
+          echo "Using SERVER_IP: $SERVER_IP"
+          echo "Using USERNAME: $USERNAME"
+          echo "Using GOOGLE_CLOUD_SSH_KEY: $GOOGLE_CLOUD_SSH_KEY"  # Imprime la clave, aunque esto no es recomendable por seguridad.
           echo "$GOOGLE_CLOUD_SSH_KEY" > ssh_key
           chmod 600 ssh_key
-          scp -v -i ssh_key -r ./dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/dist  # El flag -v es para ver detalles de la transferencia
-
-      - name: Restart server
-        env:
-          GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
-          SERVER_IP: ${{ secrets.SERVER_IP }}
-          USERNAME: ${{ secrets.USERNAME }}
-        run: |
-          ssh -i ssh_key $USERNAME@$SERVER_IP "pm2 restart hexa-app"  # Reinicia la aplicación en pm2
+          scp -v -i ssh_key -r ./dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/dist  # El flag -v es para ver detalles de la transfer
