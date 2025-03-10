@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '22'
+          node-version: '22'  # Versión de Node.js actualizada a 22
 
       - name: Install dependencies
         run: npm install
@@ -24,8 +24,8 @@ jobs:
       - name: Build the project
         run: npm run build  # Esto genera la carpeta dist/
 
-      - name: List files after build  # Verifica si la carpeta dist está allí
-        run: ls -l ./dist
+      - name: List all files after build  # Verifica si la carpeta dist está allí
+        run: ls -l
 
   deploy:
     runs-on: ubuntu-latest
@@ -35,6 +35,16 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
+      - name: Verify pm2 processes before restart
+        env:
+          GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          USERNAME: ${{ secrets.USERNAME }}
+        run: |
+          echo "$GOOGLE_CLOUD_SSH_KEY" > ssh_key
+          chmod 600 ssh_key
+          ssh -i ssh_key $USERNAME@$SERVER_IP "pm2 list"  # Verifica los procesos de pm2 antes de reiniciar
+
       - name: Copy files to server
         env:
           GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
@@ -43,7 +53,15 @@ jobs:
         run: |
           echo "$GOOGLE_CLOUD_SSH_KEY" > ssh_key
           chmod 600 ssh_key
-          scp -i ssh_key -r ./dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/dist
+          scp -v -i ssh_key -r ./dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/dist  # El flag -v es para ver detalles de la transferencia
+
+      - name: List files in dist after copy
+        env:
+          GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          USERNAME: ${{ secrets.USERNAME }}
+        run: |
+          ssh -i ssh_key $USERNAME@$SERVER_IP "ls -l /home/jasantise/HexaFront/dist"  # Verifica si los archivos se copian correctamente en el servidor
 
       - name: Restart server
         env:
@@ -51,4 +69,4 @@ jobs:
           SERVER_IP: ${{ secrets.SERVER_IP }}
           USERNAME: ${{ secrets.USERNAME }}
         run: |
-          ssh -i ssh_key $USERNAME@$SERVER_IP "pm2 restart hexa-app"
+          ssh -i ssh_key $USERNAME@$SERVER_IP "pm2 restart hexa-app"  # Reinicia la aplicación en pm2
