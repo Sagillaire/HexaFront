@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '22'  # Versión de Node.js actualizada a 22
+          node-version: '22'
 
       - name: Install dependencies
         run: npm install
@@ -43,6 +43,9 @@ jobs:
         run: |
           echo "$GOOGLE_CLOUD_SSH_KEY" > ssh_key
           chmod 600 ssh_key
+          echo "Using USERNAME: $USERNAME"
+          echo "Using SERVER_IP: ${SERVER_IP:0:4}...${SERVER_IP: -4}"  # Imprime los primeros y últimos 4 caracteres de la IP
+          echo "GOOGLE_CLOUD_SSH_KEY has been loaded, but will not be printed for security."
           ssh -i ssh_key $USERNAME@$SERVER_IP "pm2 list"  # Verifica los procesos de pm2 antes de reiniciar
 
       - name: Copy files to server
