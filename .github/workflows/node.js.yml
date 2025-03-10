@@ -3,52 +3,52 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main  # O la rama que uses para producción
-  pull_request:
-    branches:
-      - main  # Para cuando se hace PR a la rama principal
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Check out code
-      uses: actions/checkout@v2
+      - name: Check out code
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '22'  # Usa la versión de Node.js que necesitas
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    - name: Build the project
-      run: npm run build
+      - name: Build the project
+        run: npm run build  # Esto genera la carpeta dist/
+
+      - name: List files after build  # Verifica si la carpeta dist está allí
+        run: ls -l ./dist
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build  # Asegura que la construcción se haya completado antes de desplegar
+    needs: build
     
     steps:
-    - name: Check out code
-      uses: actions/checkout@v2
+      - name: Check out code
+        uses: actions/checkout@v2
 
-    - name: Copy files to server
-      env:
-        GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
-        SERVER_IP: ${{ secrets.SERVER_IP }}
-        USERNAME: ${{ secrets.USERNAME }}
-      run: |
-        echo "$GOOGLE_CLOUD_SSH_KEY" > ssh_key
-        chmod 600 ssh_key
-        scp -i ssh_key -r ./dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/dist
+      - name: Copy files to server
+        env:
+          GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          USERNAME: ${{ secrets.USERNAME }}
+        run: |
+          echo "$GOOGLE_CLOUD_SSH_KEY" > ssh_key
+          chmod 600 ssh_key
+          scp -i ssh_key -r ./dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/dist
 
-    - name: Restart server
-      env:
-        GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
-        SERVER_IP: ${{ secrets.SERVER_IP }}
-        USERNAME: ${{ secrets.USERNAME }}
-      run: |
-        ssh -i ssh_key $USERNAME@$SERVER_IP "pm2 restart hexa-app"
+      - name: Restart server
+        env:
+          GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          USERNAME: ${{ secrets.USERNAME }}
+        run: |
+          ssh -i ssh_key $USERNAME@$SERVER_IP "pm2 restart hexa-app"
