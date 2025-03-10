@@ -25,7 +25,7 @@ jobs:
         run: npm run build  # Esto genera la carpeta dist/
 
       - name: List files after build  # Verifica si la carpeta dist está allí
-        run: ls -l
+        run: ls -l ./dist  # Asegura que dist se genera correctamente
 
   deploy:
     runs-on: ubuntu-latest
@@ -43,7 +43,8 @@ jobs:
         run: |
           echo "$GOOGLE_CLOUD_SSH_KEY" > ssh_key
           chmod 600 ssh_key
-          scp -v -i ssh_key -r ./dist $USERNAME@$SERVER_IP:/home/jasantise/HexaFront  # Verifica que la ruta sea correcta
+          # Usar la ruta absoluta para la carpeta dist en GitHub Actions
+          scp -v -i ssh_key -r /home/jasantise/HexaFront/dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/dist
 
       - name: Restart server
         env:
