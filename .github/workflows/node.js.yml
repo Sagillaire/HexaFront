@@ -41,3 +41,4 @@ jobs:
             npm run build
             sudo cp -r dist/* /home/jasantise/HexaFront/dist
             sudo systemctl restart nginx
+            
