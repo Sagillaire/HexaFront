@@ -1,7 +1,7 @@
 import { User } from "../../domain/user.model";
-import { ServiceLambda } from "../api/lambda.services";
+import { ApiService } from "../api/lambda.services";
 
-const service = new ServiceLambda("/users", "BASE");
+const service = new ApiService("/users", "BASE");
 
 export const userRepository = {
   findAll: async (): Promise<User[]> => service.findAll(),
