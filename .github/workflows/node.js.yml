@@ -24,30 +24,23 @@ jobs:
       - name: Build Project
         run: npm run build
 
-      - name: Debug Secrets
-        run: |
-          echo "SERVER_IP starts with: ${SERVER_IP:0:3}"
-          echo "USERNAME starts with: ${USERNAME:0:3}"
-          echo "GOOGLE_CLOUD_SSH_KEY starts with: ${GOOGLE_CLOUD_SSH_KEY:0:3}"
-        env:
-          SERVER_IP: ${{ secrets.SERVER_IP }}
-          USERNAME: ${{ secrets.USERNAME }}
-          GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
-
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@v0.1.10
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
-          script: |
-            mkdir -p ~/.ssh
-            echo "${{ secrets.GOOGLE_CLOUD_SSH_KEY }}" > ~/.ssh/id_rsa
-            chmod 600 ~/.ssh/id_rsa
-            ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }} "echo 'SSH works!'"
-            cd /home/jasantise/HexaFront
-            git pull origin main
-            npm i
-            npm run build
-            sudo cp -r dist/* /home/jasantise/HexaFront/dist
+          credentials_json: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: learncloud-453301 # Reemplaza esto con el Project ID de Google Cloud
+
+      - name: Deploy using gcloud SSH
+        run: |
+          gcloud compute ssh ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }} --command="
+            cd /home/jasantise/HexaFront &&
+            git pull origin main &&
+            npm i &&
+            npm run build &&
+            sudo cp -r dist/* /home/jasantise/HexaFront/dist &&
             sudo systemctl restart nginx
+          "
