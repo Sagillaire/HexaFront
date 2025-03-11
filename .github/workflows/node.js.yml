@@ -41,3 +41,12 @@ jobs:
             npm run build
             sudo cp -r dist/* /home/jasantise/HexaFront/dist
             sudo systemctl restart nginx
+      - name: Debug Secrets
+        run: |
+          echo "SERVER_IP starts with: ${SERVER_IP:0:3}"
+          echo "USERNAME starts with: ${USERNAME:0:3}"
+          echo "GOOGLE_CLOUD_SSH_KEY starts with: ${GOOGLE_CLOUD_SSH_KEY:0:3}"
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          USERNAME: ${{ secrets.USERNAME }}
+          GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
