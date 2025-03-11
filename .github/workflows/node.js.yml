@@ -1,16 +1,19 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline for React App
 
 on:
   push:
     branches:
-      - main
+      - main  # Trigger on push to main branch
+  pull_request:
+    branches:
+      - main  # Trigger on PR to main branch
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Set up Node.js
@@ -21,35 +24,12 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build the project
-        run: npm run build  # Esto genera la carpeta dist/
+      - name: Run tests
+        run: npm test
 
-      - name: List files after build  # Verifica si la carpeta dist está allí
-        run: ls -l ./dist  # Asegura que dist se genera correctamente
+      - name: Build the app
+        run: npm run build
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Copy files to server
-        env:
-          GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
-          SERVER_IP: ${{ secrets.SERVER_IP }}
-          USERNAME: ${{ secrets.USERNAME }}
+      - name: Deploy to production server
         run: |
-          echo "$GOOGLE_CLOUD_SSH_KEY" > ssh_key
-          chmod 600 ssh_key
-          # Usar la ruta absoluta para la carpeta dist en GitHub Actions
-          scp -v -i ssh_key -r /home/jasantise/HexaFront/dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/dist
-
-      - name: Restart server
-        env:
-          GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
-          SERVER_IP: ${{ secrets.SERVER_IP }}
-          USERNAME: ${{ secrets.USERNAME }}
-        run: |
-          ssh -i ssh_key $USERNAME@$SERVER_IP "pm2 restart hexa-app"  # Reinicia la aplicación en pm2
+          ssh -o StrictHostKeyChecking=no jasantise@34.175.254.144 'bash -s' < deploy.sh

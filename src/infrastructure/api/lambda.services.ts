@@ -6,7 +6,7 @@ type TMethod = "get" | "post" | "put" | "patch" | "delete";
 /**
  * @description Generic service class for API requests
  */
-export class ServiceLambda<T> {
+export class ApiService<T> {
   private client: AxiosInstance;
   private baseURL: string;
 
@@ -17,12 +17,7 @@ export class ServiceLambda<T> {
 
   private async request<R>(method: TMethod, path = "", data?: unknown, params?: Record<string, unknown>): Promise<R> {
     try {
-      const response = await this.client.request<R>({
-        method,
-        url: `${this.baseURL}/${path}`,
-        data,
-        params,
-      });
+      const response = await this.client.request<R>({ method, url: `${this.baseURL}/${path}`, data, params });
       return response.data;
     } catch (error) {
       return Promise.reject(error);
