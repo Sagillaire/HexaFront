@@ -37,3 +37,21 @@ jobs:
             npm run build
             sudo cp -r dist/* /home/jasantise/HexaFront/dist
             sudo systemctl restart nginx
+      - name: Deploy to Server
+  uses: appleboy/ssh-action@v0.1.10
+  with:
+    host: ${{ secrets.SERVER_IP }}
+    username: ${{ secrets.USERNAME }}
+    key: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
+    script: |
+      mkdir -p ~/.ssh
+      echo "${{ secrets.GOOGLE_CLOUD_SSH_KEY }}" > ~/.ssh/id_rsa
+      chmod 600 ~/.ssh/id_rsa
+      ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }} "echo 'SSH works!'"
+      cd /home/jasantise/HexaFront
+      git pull origin main
+      npm ci
+      npm run build
+      sudo cp -r dist/* /home/jasantise/HexaFront/dist
+      sudo systemctl restart nginx
+
