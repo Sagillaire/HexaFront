@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Deploy React App
 
 on:
   push:
@@ -6,50 +6,34 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build the project
-        run: npm run build  # Esto genera la carpeta dist/
-
-      - name: List files after build  # Verifica si la carpeta dist está allí
-        run: ls -l ./dist  # Asegura que dist se genera correctamente
-
   deploy:
     runs-on: ubuntu-latest
-    needs: build
-    
+
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Copy files to server
-        env:
-          GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
-          SERVER_IP: ${{ secrets.SERVER_IP }}
-          USERNAME: ${{ secrets.USERNAME }}
-        run: |
-          echo "$GOOGLE_CLOUD_SSH_KEY" > ssh_key
-          chmod 600 ssh_key
-          # Usar la ruta absoluta para la carpeta dist en GitHub Actions
-          scp -v -i ssh_key -r ./dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
-      - name: Restart server
-        env:
-          GOOGLE_CLOUD_SSH_KEY: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
-          SERVER_IP: ${{ secrets.SERVER_IP }}
-          USERNAME: ${{ secrets.USERNAME }}
-        run: |
-          ssh -i ssh_key $USERNAME@$SERVER_IP "pm2 restart hexa-app"  # Reinicia la aplicación en pm2
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
+          script: |
+            cd /home/jasantise/HexaFront
+            git pull origin main
+            npm ci
+            npm run build
+            sudo cp -r dist/* /home/jasantise/HexaFront/dist
+            sudo systemctl restart nginx
