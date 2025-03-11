@@ -37,8 +37,7 @@ jobs:
             ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }} "echo 'SSH works!'"
             cd /home/jasantise/HexaFront
             git pull origin main
-            npm ci
+            npm i
             npm run build
             sudo cp -r dist/* /home/jasantise/HexaFront/dist
             sudo systemctl restart nginx
-            
