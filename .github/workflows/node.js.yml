@@ -44,7 +44,7 @@ jobs:
           echo "$GOOGLE_CLOUD_SSH_KEY" > ssh_key
           chmod 600 ssh_key
           # Usar la ruta absoluta para la carpeta dist en GitHub Actions
-          scp -v -i ssh_key -r /home/jasantise/HexaFront/dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/dist
+          scp -v -i ssh_key -r ./dist/ $USERNAME@$SERVER_IP:/home/jasantise/HexaFront/dist
 
       - name: Restart server
         env:
