@@ -1,4 +1,4 @@
-name: Deploy React App
+name: Deploy to Google Cloud VM
 
 on:
   push:
@@ -10,37 +10,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 18
 
-      - name: Install Dependencies
-        run: npm i
-
-      - name: Build Project
-        run: npm run build
-
-      - name: Authenticate with Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
-
-      - name: Set up gcloud CLI
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: learncloud-453301 # Reemplaza esto con el Project ID de Google Cloud
-
-      - name: Deploy using gcloud SSH
+      - name: Install dependencies and build
         run: |
-          gcloud compute ssh ${{ secrets.USERNAME }}@${{ secrets.SERVER_IP }} --command="
-            cd /home/jasantise/HexaFront &&
-            git pull origin main &&
-            npm i &&
-            npm run build &&
-            sudo cp -r dist/* /home/jasantise/HexaFront/dist &&
+          npm install
+          npm run build
+
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
+          script: |
+            cd /home/jasantise/HexaFront
+            rm -rf dist
+            mkdir dist
+            exit
+
+      - name: Upload build files to VM
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
+          source: "dist/*"
+          target: "/home/jasantise/HexaFront/dist"
+
+      - name: Restart Nginx
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.GOOGLE_CLOUD_SSH_KEY }}
+          script: |
             sudo systemctl restart nginx
-          "
